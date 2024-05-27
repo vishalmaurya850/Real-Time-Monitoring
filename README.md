@@ -4,7 +4,7 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000)](#)
 
 ---
-This project contains the Real Time Monitoring System by Google Earth Engine for the Land Used and we can use this analysis Construct Buildings for Industry, School, Houses, Hospitals,etc.
+This project contains the Real Time Monitoring System by Google Earth Engine for the Land Used and We can use this analysis to construct Buildings for Industry, School, Houses, Hospitals,etc.
 It can also be used to planting trees by analysing the space.
 In this project we have given One Tap Emergency Service For people using HERE API for Hospitals. 
 ---
