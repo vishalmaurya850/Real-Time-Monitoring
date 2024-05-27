@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospitals Need Recommendation</title>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-core.js"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-service.js"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-mapevents.js"></script>
+    <script src="https://js.api.here.com/v3/3.1/mapsjs-ui.js"></script>
+    <link rel="stylesheet" href="https://js.api.here.com/v3/3.1/mapsjs-ui.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        #map-container {
+            height: 70vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <label for="state">Enter the state:</label>
+        <input type="text" id="state" name="state">
+        <button onclick="startRecommendation()">Start Recommendation</button>
+    </div>
+    <div id="map-container"></div>
+
+    <script>
+        var platform = new H.service.Platform({
+            'apikey': 'roU7xLNU9i8sn2feBrOgUMjz332mm3C78WqJoiM6Kf8'
+        });
+
+        var defaultLayers = platform.createDefaultLayers();
+        var map = new H.Map(
+            document.getElementById('map-container'),
+            defaultLayers.vector.normal.map,
+            {
+                center: { lat: 20.5937, lng: 78.9629 },
+                zoom: 5
+            });
+
+        var behavior = new H.mapevents.Behavior(new H.mapevents.MapEvents(map));
+        var service = platform.getSearchService();
+        var markerCount = 0;
+
+        function startRecommendation() {
+            var state = document.getElementById('state').value;
+            findStateBounds(state);
+        }
+
+        function findStateBounds(state) {
+            var stateBounds = {
+                'Andaman and Nicobar Islands': { minLat: 6.4626999, maxLat: 14.6127996, minLng: 92.6365989, maxLng: 93.8488007 },
+                'Andhra Pradesh': { minLat: 12.9822, maxLat: 19.5075, minLng: 76.2069, maxLng: 84.8046 },
+                'Arunachal Pradesh': { minLat: 26.3479, maxLat: 29.0321, minLng: 91.1333, maxLng: 97.3517 },
+                'Assam': { minLat: 24.6607, maxLat: 28.335, minLng: 89.772, maxLng: 96.016 },
+                'Bihar': { minLat: 24.6615, maxLat: 27.2719, minLng: 83.3024, maxLng: 88.105 },
+                'Chhattisgarh': { minLat: 17.7927, maxLat: 24.6611, minLng: 80.9988, maxLng: 84.9989 },
+                'Dadra and Nagar Haveli and Daman and Diu': { minLat: 20.0081, maxLat: 20.5301, minLng: 72.6957, maxLng: 73.1861 },
+                'Punjab': { minLat: 29.3033, maxLat: 32.5188, minLng: 73.0551, maxLng: 76.8482 },
+                'Rajasthan': { minLat: 23.3, maxLat: 30.4914, minLng: 69.3001, maxLng: 78.9629 },
+                'Sikkim': { minLat: 27.0419, maxLat: 28.2898, minLng: 88.0, maxLng: 88.6462 },
+                'Tamil Nadu': { minLat: 8.0714, maxLat: 13.4967, minLng: 76.2303, maxLng: 80.3303 },
+                'Telangana': { minLat: 15.8, maxLat: 19.0, minLng: 77.0, maxLng: 81.0 },
+                'Tripura': { minLat: 22.3715, maxLat: 24.6666, minLng: 91.1167, maxLng: 92.7917 },
+                'Chandigarh': { minLat: 30.6808, maxLat: 30.7726, minLng: 76.7731, maxLng: 76.8482 },
+                'Jammu and Kashmir': { minLat: 32.1848, maxLat: 37.0607, minLng: 73.3567, maxLng: 79.3001 },
+                'Ladakh': { minLat: 33.2184, maxLat: 34.3015, minLng: 76.0988, maxLng: 78.9629 },
+                'Uttar Pradesh': { minLat: 23.9683, maxLat: 30.3306, minLng: 77.069, maxLng: 84.0248 },
+                'Uttarakhand': { minLat: 28.7654, maxLat: 31.5874, minLng: 77.4494, maxLng: 81.1013 },
+                'West Bengal': { minLat: 21.5428, maxLat: 27.0478, minLng: 85.5001, maxLng: 89.8715 }
+            };
+
+            var bounds = stateBounds[state];
+
+            if (bounds) {
+                performRecommendation(bounds);
+            } else {
+                alert('State boundaries not available.');
+            }
+        }
+
+        function performRecommendation(bounds) {
+            var delay = 0;
+            var latStep = (bounds.maxLat - bounds.minLat) / 5;
+            var lngStep = (bounds.maxLng - bounds.minLng) / 5;
+
+            for (var lat = bounds.minLat; lat < bounds.maxLat; lat += latStep) {
+                for (var lng = bounds.minLng; lng < bounds.maxLng; lng += lngStep) {
+                    setTimeout(findNearbyHospitals, delay, { lat: lat, lng: lng });
+                    delay += 1000;
+                }
+            }
+        }
+
+        function findNearbyHospitals(coordinates) {
+            if (markerCount >= 10) return;
+
+            service.browse({
+                at: coordinates.lat + ',' + coordinates.lng,
+                limit: 1,
+                categories: '800-8000-0159',
+            }, (result) => {
+                var hospitals = result.items;
+
+                var allFartherThan5km = hospitals.every(hospital => {
+                    var distance = calculateDistance(coordinates, hospital.position);
+                    return distance > 5;
+                });
+
+                if (allFartherThan5km && markerCount < 20) {
+                    service.reverseGeocode({
+                        at: coordinates.lat + ',' + coordinates.lng
+                    }, (result) => {
+                        var address = result.items[0].address.label;
+                        var icon = new H.map.Icon('https://img.icons8.com/color/48/000000/marker.png');
+                        var marker = new H.map.Marker(coordinates, { icon: icon });
+                        marker.setData('Address: ' + address);
+                        marker.addEventListener('tap', function(evt) {
+                            alert(evt.target.getData());
+                        });
+                        map.addObject(marker);
+                        markerCount++;
+                    });
+                }
+            });
+        }
+
+        function calculateDistance(pos1, pos2) {
+            var rad = function(x) {
+                return x * Math.PI / 180;
+            };
+            var R = 6371;
+            var dLat = rad(pos2.lat - pos1.lat);
+            var dLong = rad(pos2.lng - pos1.lng);
+            var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                    Math.cos(rad(pos1.lat)) * Math.cos(rad(pos2.lat)) *
+                    Math.sin(dLong / 2) * Math.sin(dLong / 2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            var distance = R * c;
+            return distance;
+        }
+    </script>
+</body>
+</html>
